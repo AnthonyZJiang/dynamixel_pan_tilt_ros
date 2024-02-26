@@ -1,0 +1,12 @@
+<launch>
+  <node name="joy_node" pkg="joy" type="joy_node">
+    <param name="dev" value="/dev/input/js1" />
+    <param name="autorepeat_rate" value="20.0" />
+  </node>
+
+  <rosparam file="$(find dynamixel_pan_tilt)/config/teleop.yaml" command="load" />
+  <node pkg="joy_teleop" type="joy_teleop.py" name="joy_teleop" />
+
+  <rosparam file="$(find dynamixel_pan_tilt)/config/pan_tilt_params.yaml" command="load" />
+  <node pkg="dynamixel_pan_tilt" type="pan_tilt_node" name="pan_tilt_node" output="screen" />
+</launch>

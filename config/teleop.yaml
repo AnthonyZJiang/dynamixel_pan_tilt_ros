@@ -1,0 +1,28 @@
+teleop:
+  pan_tilt_increment:
+    type: topic
+    message_type: dynamixel_pan_tilt/PanTilt
+    topic_name: pan_tilt_velocity
+    axis_mappings:
+      -
+        axis: 0
+        target: pan_val
+        scale: 30
+      -
+        axis: 1
+        target: tilt_val
+        scale: 30
+
+  home:
+    type: topic
+    message_type: dynamixel_pan_tilt/PanTilt
+    topic_name: pan_tilt_position
+    deadman_buttons: [4]
+    message_value:
+      -
+        target: pan_val
+        value: 2048
+      -
+        target: tilt_val
+        value: 2048
+    allow_multiple_commands: false
