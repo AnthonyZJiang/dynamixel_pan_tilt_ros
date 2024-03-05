@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>dynamixel_pan_tilt_driver</name>
+  <version>0.0.0</version>
+  <description>dynamixel_pan_tilt_drivers provides driver for pan tilt unit driven by Dynamixel smart servos</description>
+  <maintainer email="anthony.jiang.github@outlook.com">Zhengyi Jiang</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>roscpp</depend>
+  <depend>dynamixel_sdk</depend>
+  <depend>dynamixel_pan_tilt_msgs</depend>
+</package>

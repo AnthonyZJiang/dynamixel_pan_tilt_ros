@@ -1,0 +1,23 @@
+teleop:
+  pan_tilt_increment:
+    type: topic
+    message_type: dynamixel_pan_tilt_msgs/PanTiltCmd
+    topic_name: pan_tilt_node/cmd_vel
+    axis_mappings:
+      -
+        axis: 0
+        target: pan_val
+        scale: 50
+      -
+        axis: 1
+        target: tilt_val
+        scale: 50
+
+  home:
+    type: service
+    service_name: /pan_tilt_node/home
+    service_request:
+      success: True
+      message: "Homing Pan and Tilt"
+    service_persistent: False
+    buttons: [4]

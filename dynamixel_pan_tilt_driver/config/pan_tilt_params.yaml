@@ -1,0 +1,18 @@
+device_name: /dev/ttyUSB0
+baud_rate: 1000000
+addr_indirect_address_data_offset: 40
+enable_present_velocity: True
+
+dxl_pan_id: 0
+dxl_pan_profile_velocity_default: 50
+dxl_pan_profile_acceleration: 0
+dxl_pan_position_max: 3064
+dxl_pan_position_min: 1024
+dxl_pan_position_home: 2048
+
+dxl_tilt_id: 1
+dxl_tilt_profile_velocity_default: 50
+dxl_tilt_profile_acceleration: 0
+dxl_tilt_position_max: 3064
+dxl_tilt_position_min: 1024
+dxl_tilt_position_home: 2048

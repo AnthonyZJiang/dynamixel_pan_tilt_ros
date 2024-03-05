@@ -1,0 +1,17 @@
+<launch>
+  <node name="joy_node" pkg="joy" type="joy_node">
+    <param name="dev" value="/dev/input/js1" />
+    <param name="autorepeat_rate" value="0.0" />
+    <param name="deadzone" value="0.1" />
+  </node>
+
+  <rosparam file="$(find dynamixel_pan_tilt_driver)/config/teleop.yaml" command="load" />
+  <node pkg="joy_teleop" type="joy_teleop.py" name="joy_teleop" />
+
+  <!-- <env name="ROSCONSOLE_CONFIG_FILE"
+       value="$(find dynamixel_pan_tilt_driver)/custom_rosconsole.conf"/> -->
+
+  <node pkg="dynamixel_pan_tilt_driver" type="dynamixel_pan_tilt_node" name="pan_tilt_node" output="screen">
+    <rosparam file="$(find dynamixel_pan_tilt_driver)/config/pan_tilt_params.yaml" command="load" />
+  </node>
+</launch>
