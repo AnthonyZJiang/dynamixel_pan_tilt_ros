@@ -79,6 +79,7 @@ private:
     ros::NodeHandle priv_nh;
     ros::Subscriber panTiltCmdVelSub;
     ros::Subscriber panTiltCmdIncSub;
+    ros::Subscriber panTiltCmdPosSub;
     ros::Publisher panTiltStatusPub;
     ros::Timer periodicUpdateTimer;
     ros::ServiceServer panTiltCmdService;

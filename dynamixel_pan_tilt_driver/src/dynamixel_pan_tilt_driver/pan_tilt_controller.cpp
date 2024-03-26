@@ -70,6 +70,7 @@ PanTiltController::PanTiltController(ros::NodeHandle &private_nodehandle) :
 
     panTiltCmdVelSub = priv_nh.subscribe("cmd_vel", 1, &PanTiltController::panTiltCmdCallback, this);
     panTiltCmdIncSub = priv_nh.subscribe("cmd_inc", 1, &PanTiltController::panTiltCmdIncrementCallback, this);
+    panTiltCmdPosSub = priv_nh.subscribe("cmd_pos", 1, &PanTiltController::panTiltCmdPositionCallback, this);
     panTiltStatusPub = priv_nh.advertise<dynamixel_pan_tilt_msgs::ServoStatus>("status", 1);
     periodicUpdateTimer = priv_nh.createTimer(ros::Duration(0.1), &PanTiltController::periodicUpdateCallback, this);
     panTiltCmdService = priv_nh.advertiseService("home", &PanTiltController::homeCallback, this);
@@ -321,7 +322,7 @@ bool PanTiltController::homeCallback(std_srvs::Trigger::Request &req, std_srvs::
     }
     indirectSyncWrite->setData(panParams.id, ADDR_GOAL_POSITION, panParams.position_home);
     indirectSyncWrite->setData(tiltParams.id, ADDR_GOAL_POSITION, tiltParams.position_home);
-    
+
     indirectSyncWrite->setData(panParams.id, ADDR_PROFILE_VELOCITY, panParams.profile_velocity_default);
     indirectSyncWrite->setData(tiltParams.id, ADDR_PROFILE_VELOCITY, tiltParams.profile_velocity_default);
     indirectSyncWrite->setData(panParams.id, ADDR_TORQUE_ENABLE, VAL_TORQUE_ENABLE);
