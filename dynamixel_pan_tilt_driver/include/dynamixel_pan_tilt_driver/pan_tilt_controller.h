@@ -113,6 +113,7 @@ private:
 
     void panTiltCmdCallback(const dynamixel_pan_tilt_msgs::PanTiltCmd::ConstPtr &msg);
     void panTiltCmdIncrementCallback(const dynamixel_pan_tilt_msgs::PanTiltCmd::ConstPtr &msg);
+    void panTiltCmdPositionCallback(const dynamixel_pan_tilt_msgs::PanTiltCmd::ConstPtr &msg);
     void periodicUpdateCallback(const ros::TimerEvent &event);
     bool homeCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
     bool softRebootCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);

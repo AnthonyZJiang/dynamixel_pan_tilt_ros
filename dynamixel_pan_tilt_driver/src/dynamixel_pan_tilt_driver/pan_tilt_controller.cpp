@@ -270,8 +270,9 @@ void PanTiltController::panTiltCmdIncrementCallback(const dynamixel_pan_tilt_msg
     pos = tiltStatus.present_position + msg->tilt_val;
     pos = std::min(std::max(pos, tiltParams.position_min), tiltParams.position_max);
     indirectSyncWrite->setData(tiltParams.id, ADDR_GOAL_POSITION, pos);
-    indirectSyncWrite->setData(panParams.id, ADDR_PROFILE_VELOCITY, abs(int(msg->pan_val)));
-    indirectSyncWrite->setData(tiltParams.id, ADDR_PROFILE_VELOCITY, abs(int(msg->tilt_val)));
+    //TODO handle zeros!
+    indirectSyncWrite->setData(panParams.id, ADDR_PROFILE_VELOCITY, abs(std::ceil((msg->pan_val))));
+    indirectSyncWrite->setData(tiltParams.id, ADDR_PROFILE_VELOCITY, abs(std::ceil((msg->tilt_val))));
     indirectSyncWrite->setData(panParams.id, ADDR_TORQUE_ENABLE, VAL_TORQUE_ENABLE);
     indirectSyncWrite->setData(tiltParams.id, ADDR_TORQUE_ENABLE, VAL_TORQUE_ENABLE);
 
@@ -284,6 +285,32 @@ void PanTiltController::panTiltCmdIncrementCallback(const dynamixel_pan_tilt_msg
 
 }
 
+void PanTiltController::panTiltCmdPositionCallback(const dynamixel_pan_tilt_msgs::PanTiltCmd::ConstPtr &msg)
+{
+    if (!isOK())
+    {
+        return;
+    }
+    uint16_t pos = msg->pan_val;
+    pos = std::min(std::max(pos, panParams.position_min), panParams.position_max);
+    indirectSyncWrite->setData(panParams.id, ADDR_GOAL_POSITION, pos);
+    pos = msg->tilt_val;
+    pos = std::min(std::max(pos, tiltParams.position_min), tiltParams.position_max);
+    indirectSyncWrite->setData(tiltParams.id, ADDR_GOAL_POSITION, pos);
+
+    indirectSyncWrite->setData(panParams.id, ADDR_PROFILE_VELOCITY, panParams.profile_velocity_default);
+    indirectSyncWrite->setData(tiltParams.id, ADDR_PROFILE_VELOCITY, tiltParams.profile_velocity_default);
+    indirectSyncWrite->setData(panParams.id, ADDR_TORQUE_ENABLE, VAL_TORQUE_ENABLE);
+    indirectSyncWrite->setData(tiltParams.id, ADDR_TORQUE_ENABLE, VAL_TORQUE_ENABLE);
+
+    indirectSyncWrite->clearTxQueue();
+    int result = indirectSyncWrite->txPacket();
+    if (result != COMM_SUCCESS)
+    {
+        ROS_ERROR("Failed to transmit dynamixel pan tilt command: %s", packetHandler->getTxRxResult(result));
+    }
+}
+
 bool PanTiltController::homeCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
 {
     if (!isOK())
@@ -294,6 +321,7 @@ bool PanTiltController::homeCallback(std_srvs::Trigger::Request &req, std_srvs::
     }
     indirectSyncWrite->setData(panParams.id, ADDR_GOAL_POSITION, panParams.position_home);
     indirectSyncWrite->setData(tiltParams.id, ADDR_GOAL_POSITION, tiltParams.position_home);
+    
     indirectSyncWrite->setData(panParams.id, ADDR_PROFILE_VELOCITY, panParams.profile_velocity_default);
     indirectSyncWrite->setData(tiltParams.id, ADDR_PROFILE_VELOCITY, tiltParams.profile_velocity_default);
     indirectSyncWrite->setData(panParams.id, ADDR_TORQUE_ENABLE, VAL_TORQUE_ENABLE);
