@@ -4,13 +4,13 @@
 PanTiltController::PanTiltController(ros::NodeHandle &private_nodehandle) :
     priv_nh(private_nodehandle)
 {
-    ROS_INFO("Pan Tilt Controller initializing");
+    ROS_INFO_NAMED("PanTiltDriver", "Pan Tilt Controller initializing");
     panStatus = ServoStatus();
     tiltStatus = ServoStatus();
     panParams = ServoParams();
     tiltParams = ServoParams();
 
-    ROS_INFO("Pan Tilt Controller parameters:");
+    ROS_INFO_NAMED("PanTiltDriver", "Pan Tilt Controller parameters:");
     int val;
     priv_nh.param<std::string>("port_name", portName, "/dev/ttyUSB0");
     priv_nh.param<int>("baud_rate", baudRate, 1000000);
@@ -43,22 +43,22 @@ PanTiltController::PanTiltController(ros::NodeHandle &private_nodehandle) :
     tiltParams.position_home = val;
 
 
-    ROS_INFO("| port_name: %s", portName.c_str());
-    ROS_INFO("| baud_rate: %d", baudRate);
-    ROS_INFO("| enable_present_velocity: %s", enablePresentVelocity ? "true" : "false");
-    ROS_INFO("| addr_indirect_address_data_offset: %d", addrIndirectAddressDataOffset);
-    ROS_INFO("| pan joint (ID %d):", panParams.id);
-    ROS_INFO("| - profile_velocity_default: %d", panParams.profile_velocity_default);
-    ROS_INFO("| - profile_acceleration: %d", panParams.profile_acceleration);
-    ROS_INFO("| - position_max: %d", panParams.position_max);
-    ROS_INFO("| - position_min: %d", panParams.position_min);
-    ROS_INFO("| - position_home: %d", panParams.position_home);
-    ROS_INFO("| tilt joint (ID %d):", tiltParams.id);
-    ROS_INFO("| - profile_velocity_default: %d", tiltParams.profile_velocity_default);
-    ROS_INFO("| - profile_acceleration: %d", tiltParams.profile_acceleration);
-    ROS_INFO("| - position_max: %d", tiltParams.position_max);
-    ROS_INFO("| - position_min: %d", tiltParams.position_min);
-    ROS_INFO("| - position_home: %d", tiltParams.position_home);
+    ROS_INFO_NAMED("PanTiltDriver", "| port_name: %s", portName.c_str());
+    ROS_INFO_NAMED("PanTiltDriver", "| baud_rate: %d", baudRate);
+    ROS_INFO_NAMED("PanTiltDriver", "| enable_present_velocity: %s", enablePresentVelocity ? "true" : "false");
+    ROS_INFO_NAMED("PanTiltDriver", "| addr_indirect_address_data_offset: %d", addrIndirectAddressDataOffset);
+    ROS_INFO_NAMED("PanTiltDriver", "| pan joint (ID %d):", panParams.id);
+    ROS_INFO_NAMED("PanTiltDriver", "| - profile_velocity_default: %d", panParams.profile_velocity_default);
+    ROS_INFO_NAMED("PanTiltDriver", "| - profile_acceleration: %d", panParams.profile_acceleration);
+    ROS_INFO_NAMED("PanTiltDriver", "| - position_max: %d", panParams.position_max);
+    ROS_INFO_NAMED("PanTiltDriver", "| - position_min: %d", panParams.position_min);
+    ROS_INFO_NAMED("PanTiltDriver", "| - position_home: %d", panParams.position_home);
+    ROS_INFO_NAMED("PanTiltDriver", "| tilt joint (ID %d):", tiltParams.id);
+    ROS_INFO_NAMED("PanTiltDriver", "| - profile_velocity_default: %d", tiltParams.profile_velocity_default);
+    ROS_INFO_NAMED("PanTiltDriver", "| - profile_acceleration: %d", tiltParams.profile_acceleration);
+    ROS_INFO_NAMED("PanTiltDriver", "| - position_max: %d", tiltParams.position_max);
+    ROS_INFO_NAMED("PanTiltDriver", "| - position_min: %d", tiltParams.position_min);
+    ROS_INFO_NAMED("PanTiltDriver", "| - position_home: %d", tiltParams.position_home);
 
     portHandler = dynamixel::PortHandler::getPortHandler(portName.c_str());
     packetHandler = dynamixel::PacketHandler::getPacketHandler(2.0);
@@ -76,7 +76,7 @@ PanTiltController::PanTiltController(ros::NodeHandle &private_nodehandle) :
     panTiltCmdService = priv_nh.advertiseService("home", &PanTiltController::homeCallback, this);
     softRebootService = priv_nh.advertiseService("soft_reboot", &PanTiltController::softRebootCallback, this);
 
-    ROS_INFO("Pan Tilt Controller initialized");
+    ROS_INFO_NAMED("PanTiltDriver", "Pan Tilt Controller initialized");
 }
 
 PanTiltController::~PanTiltController()
@@ -133,8 +133,8 @@ void PanTiltController::init()
     writeNByteTxRx(tiltParams.id, ADDR_MIN_POSITION_LIMIT, LEN_MIN_POSITION_LIMIT, tiltParams.position_min);
     writeNByteTxRx(tiltParams.id, ADDR_PROFILE_ACCELERATION, LEN_PROFILE_ACCELERATION, tiltParams.profile_acceleration);
 
-    ROS_DEBUG("SyncRead starting: %d, length: %d, data address: %d", ADDR_INDIRECT_ADDRESS_START, readLength, ADDR_INDIRECT_ADDRESS_START + addrIndirectAddressDataOffset);
-    ROS_DEBUG("SyncWrite starting: %d, length: %d, data address: %d", addrToWrite, indirectSyncWrite->getDataLength(), addrToWriteData);
+    ROS_DEBUG_NAMED("PanTiltDriver", "SyncRead starting: %d, length: %d, data address: %d", ADDR_INDIRECT_ADDRESS_START, readLength, ADDR_INDIRECT_ADDRESS_START + addrIndirectAddressDataOffset);
+    ROS_DEBUG_NAMED("PanTiltDriver", "SyncWrite starting: %d, length: %d, data address: %d", addrToWrite, indirectSyncWrite->getDataLength(), addrToWriteData);
 }
 
 void PanTiltController::home()
@@ -148,11 +148,11 @@ void PanTiltController::updateServoStatus()
     int result = indirectSyncRead->txRxPacket();
     if (result != COMM_SUCCESS)
     {
-        ROS_ERROR_THROTTLE(1, "Failed to send dynamixel pan tilt status request: %s", packetHandler->getTxRxResult(result));
+        ROS_ERROR_THROTTLE_NAMED(1, "PanTiltDriver", "Failed to send dynamixel pan tilt status request: %s", packetHandler->getTxRxResult(result));
     }
     if (!indirectSyncRead->isAvailable())
     {
-        ROS_ERROR_THROTTLE(1, "Failed to read dynamixel pan tilt status: not all data available");
+        ROS_ERROR_THROTTLE_NAMED(1, "PanTiltDriver", "Failed to read dynamixel pan tilt status: not all data available");
     }
     ros::Time now = ros::Time::now();
     panStatus.timestamp = now;
@@ -249,13 +249,13 @@ void PanTiltController::panTiltCmdCallback(const dynamixel_pan_tilt_msgs::PanTil
     indirectSyncWrite->setData(panParams.id, ADDR_TORQUE_ENABLE, VAL_TORQUE_ENABLE);
     indirectSyncWrite->setData(tiltParams.id, ADDR_TORQUE_ENABLE, VAL_TORQUE_ENABLE);
 
-    ROS_DEBUG("Pan Tilt Controller: pan_val: %d, tilt_val: %d", int(pan_val), int(tilt_val));
+    ROS_DEBUG_NAMED("PanTiltDriver", "Pan Tilt Controller: pan_val: %d, tilt_val: %d", int(pan_val), int(tilt_val));
 
     indirectSyncWrite->clearTxQueue();
     int result = indirectSyncWrite->txPacket();
     if (result != COMM_SUCCESS)
     {
-        ROS_ERROR("Failed to transmit dynamixel pan tilt command: %s", packetHandler->getTxRxResult(result));
+        ROS_ERROR_NAMED("PanTiltDriver", "Failed to transmit dynamixel pan tilt command: %s", packetHandler->getTxRxResult(result));
     }
 }
 
@@ -281,7 +281,7 @@ void PanTiltController::panTiltCmdIncrementCallback(const dynamixel_pan_tilt_msg
     int result = indirectSyncWrite->txPacket();
     if (result != COMM_SUCCESS)
     {
-        ROS_ERROR("Failed to transmit dynamixel pan tilt command: %s", packetHandler->getTxRxResult(result));
+        ROS_ERROR_NAMED("PanTiltDriver", "Failed to transmit dynamixel pan tilt command: %s", packetHandler->getTxRxResult(result));
     }
 
 }
@@ -292,12 +292,15 @@ void PanTiltController::panTiltCmdPositionCallback(const dynamixel_pan_tilt_msgs
     {
         return;
     }
-    uint16_t pos = msg->pan_val;
-    pos = std::min(std::max(pos, panParams.position_min), panParams.position_max);
-    indirectSyncWrite->setData(panParams.id, ADDR_GOAL_POSITION, pos);
-    pos = msg->tilt_val;
-    pos = std::min(std::max(pos, tiltParams.position_min), tiltParams.position_max);
-    indirectSyncWrite->setData(tiltParams.id, ADDR_GOAL_POSITION, pos);
+    if (msg->pan_val > 1 || msg->pan_val < 0 || msg->tilt_val > 1 || msg->tilt_val < 0)
+    {
+        ROS_ERROR_NAMED("PanTiltDriver", "pan_val or tilt_val must be a value between 0 and 1.");
+        return;
+    }
+    uint16_t pos = msg->pan_val * (panParams.position_max - panParams.position_min) + panParams.position_min;
+    indirectSyncWrite->setData(panParams.id, ADDR_GOAL_POSITION, int(round(pos)));
+    pos = msg->tilt_val * (tiltParams.position_max - tiltParams.position_min) + tiltParams.position_min;
+    indirectSyncWrite->setData(tiltParams.id, ADDR_GOAL_POSITION, int(round(pos)));
 
     indirectSyncWrite->setData(panParams.id, ADDR_PROFILE_VELOCITY, panParams.profile_velocity_default);
     indirectSyncWrite->setData(tiltParams.id, ADDR_PROFILE_VELOCITY, tiltParams.profile_velocity_default);
@@ -308,7 +311,7 @@ void PanTiltController::panTiltCmdPositionCallback(const dynamixel_pan_tilt_msgs
     int result = indirectSyncWrite->txPacket();
     if (result != COMM_SUCCESS)
     {
-        ROS_ERROR("Failed to transmit dynamixel pan tilt command: %s", packetHandler->getTxRxResult(result));
+        ROS_ERROR_NAMED("PanTiltDriver", "Failed to transmit dynamixel pan tilt command: %s", packetHandler->getTxRxResult(result));
     }
 }
 
@@ -333,7 +336,7 @@ bool PanTiltController::homeCallback(std_srvs::Trigger::Request &req, std_srvs::
     if (result != COMM_SUCCESS)
     {
         std::string msg = "Failed to transmit dynamixel pan tilt home command: " + std::string(packetHandler->getTxRxResult(result));
-        ROS_ERROR_STREAM(msg);
+        ROS_ERROR_STREAM_NAMED("PanTiltDriver", msg);
         res.success = false;
         res.message = msg;
         return true;
@@ -355,7 +358,7 @@ bool PanTiltController::softRebootCallback(std_srvs::Trigger::Request &req, std_
     if (result != COMM_SUCCESS)
     {
         std::string msg = "Failed to reboot pan servo: " + std::string(packetHandler->getTxRxResult(result)) + " | " + std::string(packetHandler->getRxPacketError(error));
-        ROS_ERROR_STREAM(msg);
+        ROS_ERROR_STREAM_NAMED("PanTiltDriver", msg);
         res.success = false;
         res.message = msg;
     }
@@ -363,7 +366,7 @@ bool PanTiltController::softRebootCallback(std_srvs::Trigger::Request &req, std_
     if (result != COMM_SUCCESS)
     {
         std::string msg = "Failed to reboot tilt servo: " + std::string(packetHandler->getTxRxResult(result)) + " | " + std::string(packetHandler->getRxPacketError(error));
-        ROS_ERROR_STREAM(msg);
+        ROS_ERROR_STREAM_NAMED("PanTiltDriver", msg);
         res.success = false;
         res.message += " | " + msg;
     }
@@ -375,12 +378,12 @@ bool PanTiltController::isOK()
     bool ok = true;
     if (!panStatus.online)
     {
-        ROS_ERROR_THROTTLE(1, "Pan servo is not online");
+        ROS_ERROR_THROTTLE_NAMED(1, "PanTiltDriver", "Pan servo is not online");
         ok = false;
     }
     else if (panStatus.hw_error_overload || panStatus.hw_error_overheating || panStatus.hw_error_electronical_shock || panStatus.hw_error_motor_encoder)
     {
-        ROS_ERROR_THROTTLE(1, "Pan servo is in error: %s%s%s%s",
+        ROS_ERROR_THROTTLE_NAMED(1, "PanTiltDriver", "Pan servo is in error: %s%s%s%s",
                            panStatus.hw_error_overload ? "overload " : "",
                            panStatus.hw_error_overheating ? "overheating " : "",
                            panStatus.hw_error_electronical_shock ? "electronical_shock " : "",
@@ -389,12 +392,12 @@ bool PanTiltController::isOK()
     }
     if (!tiltStatus.online)
     {
-        ROS_ERROR_THROTTLE(1, "Tilt servo is not online");
+        ROS_ERROR_THROTTLE_NAMED(1, "PanTiltDriver", "Tilt servo is not online");
         ok = false;
     }
     else if (tiltStatus.hw_error_overload || tiltStatus.hw_error_overheating || tiltStatus.hw_error_electronical_shock || tiltStatus.hw_error_motor_encoder)
     {
-        ROS_ERROR_THROTTLE(1, "Tilt servo is in error: %s%s%s%s",
+        ROS_ERROR_THROTTLE_NAMED(1, "PanTiltDriver", "Tilt servo is in error: %s%s%s%s",
                            tiltStatus.hw_error_overload ? "overload " : "",
                            tiltStatus.hw_error_overheating ? "overheating " : "",
                            tiltStatus.hw_error_electronical_shock ? "electronical_shock " : "",
@@ -426,19 +429,19 @@ void PanTiltController::writeNByteTxRx(uint8_t id, uint16_t address, uint16_t le
         result = packetHandler->write4ByteTxRx(portHandler, id, address, data, &error);
     else
     {
-        ROS_ERROR("Invalid length %d while writing value %d to address %d", length, data, address);
+        ROS_ERROR_NAMED("PanTiltDriver", "Invalid length %d while writing value %d to address %d", length, data, address);
         return;
     }
     if (result != COMM_SUCCESS)
     {
-        ROS_ERROR("Failed to trasmit command while writing value %d to address %d: %s", 
+        ROS_ERROR_NAMED("PanTiltDriver", "Failed to trasmit command while writing value %d to address %d: %s", 
                     data,
                     address,
                     packetHandler->getTxRxResult(result));
     }
     if (error != 0)
     {
-        ROS_ERROR("Dynamixel pan tilt error occurred while writing value %d to address %d: %s", 
+        ROS_ERROR_NAMED("PanTiltDriver", "Dynamixel pan tilt error occurred while writing value %d to address %d: %s", 
                     data,
                     address,
                     packetHandler->getRxPacketError(error));

@@ -7,7 +7,7 @@ int main(int argc, char **argv)
     ros::NodeHandle priv_nh("~");
     PanTiltController panTiltController(priv_nh);
 
-    ROS_INFO("Pan Tilt Node Started");
+    ROS_INFO_NAMED("PanTiltDriver", "Pan Tilt Node Started");
     ros::spin();
     return 0;
 }
