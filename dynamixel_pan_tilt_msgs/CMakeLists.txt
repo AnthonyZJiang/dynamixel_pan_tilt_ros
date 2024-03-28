@@ -8,7 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   PanTiltCmd.msg
-  ServoStatus.msg
+  JointStatus.msg
 )
 
 generate_messages(

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>dynamixel_pan_tilt_driver</name>
-  <version>0.0.0</version>
-  <description>dynamixel_pan_tilt_drivers provides driver for pan tilt unit driven by Dynamixel smart servos</description>
+  <version>1.0.0</version>
+  <description>dynamixel_pan_tilt_drivers provides driver for the Ice Nine Mini Dynamixel Pan Tilt device</description>
   <maintainer email="anthony.jiang.github@outlook.com">Zhengyi Jiang</maintainer>
   <license>TODO</license>
 

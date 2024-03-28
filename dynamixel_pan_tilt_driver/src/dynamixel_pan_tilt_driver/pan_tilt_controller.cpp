@@ -1,12 +1,12 @@
 #include "dynamixel_pan_tilt_driver/pan_tilt_controller.h"
-#include <dynamixel_pan_tilt_msgs/ServoStatus.h>
+#include <dynamixel_pan_tilt_msgs/JointStatus.h>
 
 PanTiltController::PanTiltController(ros::NodeHandle &private_nodehandle) :
     priv_nh(private_nodehandle)
 {
     ROS_INFO_NAMED("PanTiltDriver", "Pan Tilt Controller initializing");
-    panStatus = ServoStatus();
-    tiltStatus = ServoStatus();
+    panStatus = JointStatus();
+    tiltStatus = JointStatus();
     panParams = ServoParams();
     tiltParams = ServoParams();
 
@@ -71,7 +71,7 @@ PanTiltController::PanTiltController(ros::NodeHandle &private_nodehandle) :
     panTiltCmdVelSub = priv_nh.subscribe("cmd_vel", 1, &PanTiltController::panTiltCmdCallback, this);
     panTiltCmdIncSub = priv_nh.subscribe("cmd_inc", 1, &PanTiltController::panTiltCmdIncrementCallback, this);
     panTiltCmdPosSub = priv_nh.subscribe("cmd_pos", 1, &PanTiltController::panTiltCmdPositionCallback, this);
-    panTiltStatusPub = priv_nh.advertise<dynamixel_pan_tilt_msgs::ServoStatus>("status", 1);
+    panTiltStatusPub = priv_nh.advertise<dynamixel_pan_tilt_msgs::JointStatus>("status", 1);
     periodicUpdateTimer = priv_nh.createTimer(ros::Duration(0.1), &PanTiltController::periodicUpdateCallback, this);
     panTiltCmdService = priv_nh.advertiseService("home", &PanTiltController::homeCallback, this);
     softRebootService = priv_nh.advertiseService("soft_reboot", &PanTiltController::softRebootCallback, this);
@@ -142,7 +142,7 @@ void PanTiltController::home()
     
 }
 
-void PanTiltController::updateServoStatus()
+void PanTiltController::updateJointStatus()
 {
     uint8_t hw_error;
     int result = indirectSyncRead->txRxPacket();
@@ -193,8 +193,8 @@ void PanTiltController::updateServoStatus()
 
 void PanTiltController::periodicUpdateCallback(const ros::TimerEvent &)
 {
-    updateServoStatus();
-    dynamixel_pan_tilt_msgs::ServoStatus msg;
+    updateJointStatus();
+    dynamixel_pan_tilt_msgs::JointStatus msg;
 
     msg.header.stamp = panStatus.timestamp;
     msg.online = {panStatus.online, tiltStatus.online};

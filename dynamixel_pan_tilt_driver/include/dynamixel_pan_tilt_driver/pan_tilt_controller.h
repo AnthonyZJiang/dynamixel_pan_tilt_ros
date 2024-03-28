@@ -43,7 +43,7 @@
 #define ERNUM_HW_OVERLOAD 32
 
 
-struct ServoStatus
+struct JointStatus
 {
     ros::Time timestamp;
     bool online;
@@ -102,15 +102,15 @@ private:
     uint16_t addrIndirectAddressDataOffset;
     bool enablePresentVelocity;
 
-    ServoStatus panStatus;
-    ServoStatus tiltStatus;
+    JointStatus panStatus;
+    JointStatus tiltStatus;
     ServoParams panParams;
     ServoParams tiltParams;
 
     void init();
     void home();
     void stop();
-    void updateServoStatus();
+    void updateJointStatus();
 
     void panTiltCmdCallback(const dynamixel_pan_tilt_msgs::PanTiltCmd::ConstPtr &msg);
     void panTiltCmdIncrementCallback(const dynamixel_pan_tilt_msgs::PanTiltCmd::ConstPtr &msg);
