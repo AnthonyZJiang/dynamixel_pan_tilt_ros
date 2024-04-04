@@ -242,16 +242,25 @@ void PanTiltController::updateDiagnostics(diagnostic_updater::DiagnosticStatusWr
         stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "OK");
     }
     stat.addf("online", "pan: %s, tilt: %s", bool_to_str(tiltStatus.online), bool_to_str(panStatus.online));
-    stat.addf("goal_position", "pan: %d, tilt: %d", panStatus.goal_position, tiltStatus.goal_position);
-    stat.addf("present_position", "pan: %d, tilt: %d", panStatus.present_position, tiltStatus.present_position);
-    stat.addf("present_velocity", "pan: %d, tilt: %d", panStatus.present_velocity, tiltStatus.present_velocity);
-    stat.addf("present_load", "pan: %d, tilt: %d", panStatus.present_load, tiltStatus.present_load);
     stat.addf("torque_enable", "pan: %s, tilt: %s", bool_to_str(panStatus.torque_enable), bool_to_str(tiltStatus.torque_enable));
-    stat.addf("hw_error_overload", "pan: %s, tilt: %s", bool_to_str(panStatus.hw_error_overload), bool_to_str(tiltStatus.hw_error_overload));
-    stat.addf("hw_error_overheating", "pan: %s, tilt: %s", bool_to_str(panStatus.hw_error_overheating), bool_to_str(tiltStatus.hw_error_overheating));
-    stat.addf("hw_error_input_voltage", "pan: %s, tilt: %s", bool_to_str(panStatus.hw_error_input_voltage), bool_to_str(tiltStatus.hw_error_input_voltage));
-    stat.addf("hw_error_electronical_shock", "pan: %s, tilt: %s", bool_to_str(panStatus.hw_error_electronical_shock), bool_to_str(tiltStatus.hw_error_electronical_shock));
-    stat.addf("hw_error_motor_encoder", "pan: %s, tilt: %s", bool_to_str(panStatus.hw_error_motor_encoder), bool_to_str(tiltStatus.hw_error_motor_encoder));
+    stat.addf("hw_error_pan", "%s%s%s%s",
+        panStatus.hw_error_overload ? "overload " : "",
+        panStatus.hw_error_overheating ? "overheating " : "",
+        panStatus.hw_error_electronical_shock ? "electronical_shock " : "",
+        panStatus.hw_error_motor_encoder ? "motor_encoder " : "");
+    stat.addf("hw_error_tilt", "%s%s%s%s",
+        tiltStatus.hw_error_overload ? "overload " : "",
+        tiltStatus.hw_error_overheating ? "overheating " : "",
+        tiltStatus.hw_error_electronical_shock ? "electronical_shock " : "",
+        tiltStatus.hw_error_motor_encoder ? "motor_encoder " : "");
+    stat.add("goal_position_pan", panStatus.goal_position);
+    stat.add("goal_position_tilt", tiltStatus.goal_position);
+    stat.add("present_position_pan", panStatus.present_position);
+    stat.add("present_position_tilt", tiltStatus.present_position);
+    stat.add("present_velocity_pan", panStatus.present_velocity);
+    stat.add("present_velocity_tilt", tiltStatus.present_velocity);
+    stat.add("present_load_pan", panStatus.present_load);
+    stat.add("present_load_tilt", tiltStatus.present_load);
 }
 
 void PanTiltController::panTiltCmdCallback(const dynamixel_pan_tilt_msgs::PanTiltCmd::ConstPtr &msg)
