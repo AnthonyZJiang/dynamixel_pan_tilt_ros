@@ -1,8 +1,13 @@
 #include "dynamixel_pan_tilt_driver/pan_tilt_controller.h"
 #include <dynamixel_pan_tilt_msgs/JointStatus.h>
 
-PanTiltController::PanTiltController(ros::NodeHandle &private_nodehandle) :
-    priv_nh(private_nodehandle)
+std::string bool_to_str(bool b)
+{
+    return b ? "True" : "False";
+}
+
+PanTiltController::PanTiltController(ros::NodeHandle &node, ros::NodeHandle &private_nodehandle) :
+    priv_nh(private_nodehandle), diagnostics(node, private_nodehandle, ros::this_node::getName())
 {
     ROS_INFO_NAMED("PanTiltDriver", "Pan Tilt Controller initializing");
     panStatus = JointStatus();
@@ -41,6 +46,7 @@ PanTiltController::PanTiltController(ros::NodeHandle &private_nodehandle) :
     panParams.position_home = val;
     priv_nh.param<int>("dxl_tilt_position_home", val, 2048);
     tiltParams.position_home = val;
+    priv_nh.param<bool>("broadcast_joint_status", broadcast_joint_status, false);
 
 
     ROS_INFO_NAMED("PanTiltDriver", "| port_name: %s", portName.c_str());
@@ -71,7 +77,10 @@ PanTiltController::PanTiltController(ros::NodeHandle &private_nodehandle) :
     panTiltCmdVelSub = priv_nh.subscribe("cmd_vel", 1, &PanTiltController::panTiltCmdCallback, this);
     panTiltCmdIncSub = priv_nh.subscribe("cmd_inc", 1, &PanTiltController::panTiltCmdIncrementCallback, this);
     panTiltCmdPosSub = priv_nh.subscribe("cmd_pos", 1, &PanTiltController::panTiltCmdPositionCallback, this);
-    panTiltStatusPub = priv_nh.advertise<dynamixel_pan_tilt_msgs::JointStatus>("status", 1);
+    if (broadcast_joint_status)
+    {
+        panTiltStatusPub = priv_nh.advertise<dynamixel_pan_tilt_msgs::JointStatus>("status", 1);
+    }
     periodicUpdateTimer = priv_nh.createTimer(ros::Duration(0.1), &PanTiltController::periodicUpdateCallback, this);
     panTiltCmdService = priv_nh.advertiseService("home", &PanTiltController::homeCallback, this);
     softRebootService = priv_nh.advertiseService("soft_reboot", &PanTiltController::softRebootCallback, this);
@@ -133,6 +142,9 @@ void PanTiltController::init()
     writeNByteTxRx(tiltParams.id, ADDR_MIN_POSITION_LIMIT, LEN_MIN_POSITION_LIMIT, tiltParams.position_min);
     writeNByteTxRx(tiltParams.id, ADDR_PROFILE_ACCELERATION, LEN_PROFILE_ACCELERATION, tiltParams.profile_acceleration);
 
+    diagnostics.setHardwareID("dxl_pan_tilt");
+    diagnostics.add("update_diagnostics", this, &PanTiltController::updateDiagnostics);
+
     ROS_DEBUG_NAMED("PanTiltDriver", "SyncRead starting: %d, length: %d, data address: %d", ADDR_INDIRECT_ADDRESS_START, readLength, ADDR_INDIRECT_ADDRESS_START + addrIndirectAddressDataOffset);
     ROS_DEBUG_NAMED("PanTiltDriver", "SyncWrite starting: %d, length: %d, data address: %d", addrToWrite, indirectSyncWrite->getDataLength(), addrToWriteData);
 }
@@ -165,6 +177,7 @@ void PanTiltController::updateJointStatus()
         panStatus.torque_enable = indirectSyncRead->getData(panParams.id, ADDR_TORQUE_ENABLE) == VAL_TORQUE_ENABLE;
         panStatus.goal_position = indirectSyncRead->getData(panParams.id, ADDR_GOAL_POSITION);
         hw_error = indirectSyncRead->getData(panParams.id, ADDR_HARDWARE_ERROR_STATUS);
+        panStatus.hw_error = hw_error;
         panStatus.hw_error_overload = hw_error & ERNUM_HW_OVERLOAD;
         panStatus.hw_error_overheating = hw_error & ERNUM_HW_OVERHEATING;
         panStatus.hw_error_input_voltage = hw_error & ERNUM_HW_INPUT_VOLTAGE;
@@ -182,6 +195,7 @@ void PanTiltController::updateJointStatus()
         tiltStatus.torque_enable = indirectSyncRead->getData(tiltParams.id, ADDR_TORQUE_ENABLE) == VAL_TORQUE_ENABLE;
         tiltStatus.goal_position = indirectSyncRead->getData(tiltParams.id, ADDR_GOAL_POSITION);
         hw_error = indirectSyncRead->getData(tiltParams.id, ADDR_HARDWARE_ERROR_STATUS);
+        tiltStatus.hw_error = hw_error;
         tiltStatus.hw_error_overload = hw_error & ERNUM_HW_OVERLOAD;
         tiltStatus.hw_error_overheating = hw_error & ERNUM_HW_OVERHEATING;
         tiltStatus.hw_error_electronical_shock = hw_error & ERNUM_HW_ELECTRIONICAL_SHOCK;
@@ -194,8 +208,13 @@ void PanTiltController::updateJointStatus()
 void PanTiltController::periodicUpdateCallback(const ros::TimerEvent &)
 {
     updateJointStatus();
-    dynamixel_pan_tilt_msgs::JointStatus msg;
+    diagnostics.update();
 
+    if (!broadcast_joint_status)
+    {
+        return;
+    }
+    dynamixel_pan_tilt_msgs::JointStatus msg;
     msg.header.stamp = panStatus.timestamp;
     msg.online = {panStatus.online, tiltStatus.online};
     msg.goal_position = {panStatus.goal_position, tiltStatus.goal_position};
@@ -208,8 +227,31 @@ void PanTiltController::periodicUpdateCallback(const ros::TimerEvent &)
     msg.hw_error_input_voltage = {panStatus.hw_error_input_voltage, tiltStatus.hw_error_input_voltage};
     msg.hw_error_electronical_shock = {panStatus.hw_error_electronical_shock, tiltStatus.hw_error_electronical_shock};
     msg.hw_error_motor_encoder = {panStatus.hw_error_motor_encoder, tiltStatus.hw_error_motor_encoder};
-
     panTiltStatusPub.publish(msg);
+}
+
+void PanTiltController::updateDiagnostics(diagnostic_updater::DiagnosticStatusWrapper &stat)
+{
+    if (!panStatus.online || !tiltStatus.online) {
+        stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR, "Pan tilt joint offline.");
+    } else
+    if (panStatus.hw_error > 0 || tiltStatus.hw_error > 0) {
+        stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR, "Pan tilt joint hardware error.");
+    } else
+    {
+        stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "OK");
+    }
+    stat.addf("online", "pan: %s, tilt: %s", bool_to_str(tiltStatus.online), bool_to_str(panStatus.online));
+    stat.addf("goal_position", "pan: %d, tilt: %d", panStatus.goal_position, tiltStatus.goal_position);
+    stat.addf("present_position", "pan: %d, tilt: %d", panStatus.present_position, tiltStatus.present_position);
+    stat.addf("present_velocity", "pan: %d, tilt: %d", panStatus.present_velocity, tiltStatus.present_velocity);
+    stat.addf("present_load", "pan: %d, tilt: %d", panStatus.present_load, tiltStatus.present_load);
+    stat.addf("torque_enable", "pan: %s, tilt: %s", bool_to_str(panStatus.torque_enable), bool_to_str(tiltStatus.torque_enable));
+    stat.addf("hw_error_overload", "pan: %s, tilt: %s", bool_to_str(panStatus.hw_error_overload), bool_to_str(tiltStatus.hw_error_overload));
+    stat.addf("hw_error_overheating", "pan: %s, tilt: %s", bool_to_str(panStatus.hw_error_overheating), bool_to_str(tiltStatus.hw_error_overheating));
+    stat.addf("hw_error_input_voltage", "pan: %s, tilt: %s", bool_to_str(panStatus.hw_error_input_voltage), bool_to_str(tiltStatus.hw_error_input_voltage));
+    stat.addf("hw_error_electronical_shock", "pan: %s, tilt: %s", bool_to_str(panStatus.hw_error_electronical_shock), bool_to_str(tiltStatus.hw_error_electronical_shock));
+    stat.addf("hw_error_motor_encoder", "pan: %s, tilt: %s", bool_to_str(panStatus.hw_error_motor_encoder), bool_to_str(tiltStatus.hw_error_motor_encoder));
 }
 
 void PanTiltController::panTiltCmdCallback(const dynamixel_pan_tilt_msgs::PanTiltCmd::ConstPtr &msg)
@@ -357,7 +399,7 @@ bool PanTiltController::softRebootCallback(std_srvs::Trigger::Request &req, std_
     int result = packetHandler->reboot(portHandler, panParams.id, &error);
     if (result != COMM_SUCCESS)
     {
-        std::string msg = "Failed to reboot pan servo: " + std::string(packetHandler->getTxRxResult(result)) + " | " + std::string(packetHandler->getRxPacketError(error));
+        std::string msg = "Failed to reboot pan servo: " + std::string(packetHandler->getTxRxResult(result)) + " | " + std::string(packetHandler->getRxPacketError(error))+  ". ";
         ROS_ERROR_STREAM_NAMED("PanTiltDriver", msg);
         res.success = false;
         res.message = msg;
@@ -365,10 +407,10 @@ bool PanTiltController::softRebootCallback(std_srvs::Trigger::Request &req, std_
     result = packetHandler->reboot(portHandler, tiltParams.id, &error);
     if (result != COMM_SUCCESS)
     {
-        std::string msg = "Failed to reboot tilt servo: " + std::string(packetHandler->getTxRxResult(result)) + " | " + std::string(packetHandler->getRxPacketError(error));
+        std::string msg = "Failed to reboot tilt servo: " + std::string(packetHandler->getTxRxResult(result)) + " | " + std::string(packetHandler->getRxPacketError(error)) + ". ";
         ROS_ERROR_STREAM_NAMED("PanTiltDriver", msg);
         res.success = false;
-        res.message += " | " + msg;
+        res.message += msg;
     }
     return true;
 }
@@ -381,7 +423,7 @@ bool PanTiltController::isOK()
         ROS_ERROR_THROTTLE_NAMED(1, "PanTiltDriver", "Pan servo is not online");
         ok = false;
     }
-    else if (panStatus.hw_error_overload || panStatus.hw_error_overheating || panStatus.hw_error_electronical_shock || panStatus.hw_error_motor_encoder)
+    else if (panStatus.hw_error > 0)
     {
         ROS_ERROR_THROTTLE_NAMED(1, "PanTiltDriver", "Pan servo is in error: %s%s%s%s",
                            panStatus.hw_error_overload ? "overload " : "",
@@ -395,7 +437,7 @@ bool PanTiltController::isOK()
         ROS_ERROR_THROTTLE_NAMED(1, "PanTiltDriver", "Tilt servo is not online");
         ok = false;
     }
-    else if (tiltStatus.hw_error_overload || tiltStatus.hw_error_overheating || tiltStatus.hw_error_electronical_shock || tiltStatus.hw_error_motor_encoder)
+    else if (tiltStatus.hw_error > 0)
     {
         ROS_ERROR_THROTTLE_NAMED(1, "PanTiltDriver", "Tilt servo is in error: %s%s%s%s",
                            tiltStatus.hw_error_overload ? "overload " : "",

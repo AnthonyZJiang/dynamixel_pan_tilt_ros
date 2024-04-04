@@ -1,11 +1,12 @@
 #pragma once
 
 #include <ros/ros.h>
+#include <std_srvs/Trigger.h>
+#include <diagnostic_updater/diagnostic_updater.h>
 #include <dynamixel_sdk/dynamixel_sdk.h>
 #include <dynamixel_pan_tilt_msgs/PanTiltCmd.h>
 #include "dynamixel_pan_tilt_driver/indirect_sync_read.h"
 #include "dynamixel_pan_tilt_driver/indirect_sync_write.h"
-#include "std_srvs/Trigger.h"
 
 #define ADDR_OPERATING_MODE 11
 #define ADDR_MAX_POSITION_LIMIT 48
@@ -52,6 +53,7 @@ struct JointStatus
     int16_t present_velocity;
     int16_t present_load;
     bool torque_enable;
+    uint8_t hw_error;
     bool hw_error_overload;
     bool hw_error_overheating;
     bool hw_error_input_voltage;
@@ -72,7 +74,7 @@ struct ServoParams
 class PanTiltController
 {
 public:
-    PanTiltController(ros::NodeHandle &private_nodehandle);
+    PanTiltController(ros::NodeHandle &node, ros::NodeHandle &private_nodehandle);
     ~PanTiltController();
 
 private:
@@ -84,12 +86,15 @@ private:
     ros::Timer periodicUpdateTimer;
     ros::ServiceServer panTiltCmdService;
     ros::ServiceServer softRebootService;
+    diagnostic_updater::Updater diagnostics;
 
     dynamixel::PortHandler* portHandler;
     dynamixel::PacketHandler* packetHandler;
     std::unique_ptr<dynamixel::GroupSyncWrite> syncWriteOperatingModeHandler;
     std::unique_ptr<IndirectSyncRead> indirectSyncRead;
     std::unique_ptr<IndirectSyncWrite> indirectSyncWrite;
+
+    bool broadcast_joint_status;
     
     // dynamixel::GroupSyncWrite syncWriteOperatingModeHandler;
     // IndirectSyncRead indirectSyncRead;
@@ -111,6 +116,7 @@ private:
     void home();
     void stop();
     void updateJointStatus();
+    void updateDiagnostics(diagnostic_updater::DiagnosticStatusWrapper &stat);
 
     void panTiltCmdCallback(const dynamixel_pan_tilt_msgs::PanTiltCmd::ConstPtr &msg);
     void panTiltCmdIncrementCallback(const dynamixel_pan_tilt_msgs::PanTiltCmd::ConstPtr &msg);

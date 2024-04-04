@@ -4,8 +4,9 @@
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "pan_tilt_node");
+    ros::NodeHandle nh;
     ros::NodeHandle priv_nh("~");
-    PanTiltController panTiltController(priv_nh);
+    PanTiltController panTiltController(nh, priv_nh);
 
     ROS_INFO_NAMED("PanTiltDriver", "Pan Tilt Node Started");
     ros::spin();

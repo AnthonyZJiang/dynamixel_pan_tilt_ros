@@ -2,6 +2,7 @@ device_name: /dev/ttyUSB0
 baud_rate: 1000000
 addr_indirect_address_data_offset: 40
 enable_present_velocity: True
+broadcast_joint_status: False
 
 dxl_pan_id: 0
 dxl_pan_profile_velocity_default: 50
