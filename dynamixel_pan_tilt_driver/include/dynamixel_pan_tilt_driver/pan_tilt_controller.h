@@ -113,8 +113,6 @@ private:
     ServoParams tiltParams;
 
     void init();
-    void home();
-    void stop();
     void updateJointStatus();
     void updateDiagnostics(diagnostic_updater::DiagnosticStatusWrapper &stat);
 

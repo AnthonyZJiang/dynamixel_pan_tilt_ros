@@ -149,11 +149,6 @@ void PanTiltController::init()
     ROS_DEBUG_NAMED("PanTiltDriver", "SyncWrite starting: %d, length: %d, data address: %d", addrToWrite, indirectSyncWrite->getDataLength(), addrToWriteData);
 }
 
-void PanTiltController::home()
-{
-    
-}
-
 void PanTiltController::updateJointStatus()
 {
     uint8_t hw_error;
