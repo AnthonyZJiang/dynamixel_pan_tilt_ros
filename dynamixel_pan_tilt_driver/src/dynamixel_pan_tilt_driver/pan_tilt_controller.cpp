@@ -1,9 +1,14 @@
 #include "dynamixel_pan_tilt_driver/pan_tilt_controller.h"
 #include <dynamixel_pan_tilt_msgs/JointStatus.h>
 
-std::string bool_to_str(bool b)
+const char* bool_to_str(bool b)
 {
-    return b ? "True" : "False";
+    return b ? "true" : "false";
+}
+
+int bool_to_int(bool b)
+{
+    return b ? 1 : 0;
 }
 
 PanTiltController::PanTiltController(ros::NodeHandle &node, ros::NodeHandle &private_nodehandle) :
@@ -115,12 +120,6 @@ void PanTiltController::init()
     uint16_t addrToWriteData = addrIndirectAddressDataOffset + (addrToWrite + ADDR_INDIRECT_ADDRESS_START)/2;
 
     indirectSyncWrite = std::make_unique<IndirectSyncWrite>(portHandler, packetHandler, addrToWrite, addrToWriteData);
-    indirectSyncRead->addParam(ADDR_PRESENT_LOAD, LEN_PRESENT_LOAD);
-    if (enablePresentVelocity)
-        indirectSyncRead->addParam(ADDR_PRESENT_VELOCITY, LEN_PRESENT_VELOCITY);
-    indirectSyncRead->addParam(ADDR_PRESENT_POSITION, LEN_PRESENT_POSITION);
-    indirectSyncRead->addParam(ADDR_HARDWARE_ERROR_STATUS, LEN_HARDWARE_ERROR_STATUS);
-    indirectSyncRead->addParam(ADDR_GOAL_POSITION, LEN_GOAL_POSITION);
     indirectSyncWrite->addParam(ADDR_GOAL_POSITION, LEN_GOAL_POSITION);
     indirectSyncWrite->addParam(ADDR_TORQUE_ENABLE, LEN_TORQUE_ENABLE);
     indirectSyncWrite->addParam(ADDR_PROFILE_VELOCITY, LEN_PRESENT_VELOCITY);
@@ -236,8 +235,10 @@ void PanTiltController::updateDiagnostics(diagnostic_updater::DiagnosticStatusWr
     {
         stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "OK");
     }
-    stat.addf("online", "pan: %s, tilt: %s", bool_to_str(tiltStatus.online), bool_to_str(panStatus.online));
-    stat.addf("torque_enable", "pan: %s, tilt: %s", bool_to_str(panStatus.torque_enable), bool_to_str(tiltStatus.torque_enable));
+    stat.add("online_pan", bool_to_int(tiltStatus.online));
+    stat.add("online_tilt", bool_to_int(panStatus.online));
+    stat.add("torque_enabled_pan", bool_to_int(panStatus.torque_enable));
+    stat.add("torque_enabled_tilt", bool_to_int(tiltStatus.torque_enable));
     stat.addf("hw_error_pan", "%s%s%s%s",
         panStatus.hw_error_overload ? "overload " : "",
         panStatus.hw_error_overheating ? "overheating " : "",
