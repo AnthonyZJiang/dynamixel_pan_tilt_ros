@@ -19,7 +19,7 @@ PanTiltController::PanTiltController(ros::NodeHandle &node, ros::NodeHandle &pri
     int val;
     priv_nh.param<std::string>("port_name", portName, "/dev/ttyUSB0");
     priv_nh.param<int>("baud_rate", baudRate, 1000000);
-    priv_nh.param<bool>("enable_present_velocity", enablePresentVelocity, true);
+    priv_nh.param<bool>("enable_present_velocity", enablePresentVelocity, false);
     priv_nh.param<int>("addr_indirect_address_data_offset", val, 56);
     addrIndirectAddressDataOffset = val;
     priv_nh.param<int>("dxl_pan_id", val, 0);
@@ -143,7 +143,7 @@ void PanTiltController::init()
     writeNByteTxRx(tiltParams.id, ADDR_PROFILE_ACCELERATION, LEN_PROFILE_ACCELERATION, tiltParams.profile_acceleration);
 
     diagnostics.setHardwareID("dxl_pan_tilt");
-    diagnostics.add("update_diagnostics", this, &PanTiltController::updateDiagnostics);
+    diagnostics.add("status", this, &PanTiltController::updateDiagnostics);
 
     ROS_DEBUG_NAMED("PanTiltDriver", "SyncRead starting: %d, length: %d, data address: %d", ADDR_INDIRECT_ADDRESS_START, readLength, ADDR_INDIRECT_ADDRESS_START + addrIndirectAddressDataOffset);
     ROS_DEBUG_NAMED("PanTiltDriver", "SyncWrite starting: %d, length: %d, data address: %d", addrToWrite, indirectSyncWrite->getDataLength(), addrToWriteData);
