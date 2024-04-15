@@ -1,4 +1,6 @@
-# ROS package for the Ice Nine Mini Dynamixel Pan Tilt device
+# ROS package for a pan tilt device made of two Dynamixel servos
+
+https://github.com/AnthonyZJiang/dynamixel_pan_tilt/assets/8778250/a04f16a8-ec1d-4a47-b50e-7347ddd1794e
 
 # Install
 ```
@@ -124,3 +126,5 @@ Home position value of the pan servo
 *int (default 2048)*
 
 Home position value of the tilt servo
+
+
