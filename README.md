@@ -1,6 +1,7 @@
-# ROS package for a pan tilt device made of two Dynamixel servos
+# dynamixel_pan_tilt_ros
+ROS package for a pan tilt device made of two Dynamixel servos.
 
-https://github.com/AnthonyZJiang/dynamixel_pan_tilt/assets/8778250/a04f16a8-ec1d-4a47-b50e-7347ddd1794e
+An example of the hardware can be found in https://github.com/AnthonyZJiang/dynamixal-pan-tilt-camera-cad/
 
 # Install
 ```
