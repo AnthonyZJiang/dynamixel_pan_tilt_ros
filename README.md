@@ -34,9 +34,9 @@ Command the pan tilt servos to move by the specified position increment.
 
 Command the pan tilt servos to move to the desired position within the minimum and maximum range. is a parameter used to specify the desired position of a servo motor within its range.
 
-0: Represents the minimum position of the servo motor, defined by `dxl_<pan/tilt>_position_min`
-1: Represents the maximum position of the servo motor, defined by `dxl_<pan/tilt>_position_max`
-Values between 0 and 1 interpolate between the minimum and maximum positions linearly.
+- 0: Represents the minimum position of the servo motor, defined by `dxl_<pan/tilt>_position_min`
+- 1: Represents the maximum position of the servo motor, defined by `dxl_<pan/tilt>_position_max`
+- Values between 0 and 1 interpolate between the minimum and maximum positions linearly.
 
 ## Services
 ### /home
