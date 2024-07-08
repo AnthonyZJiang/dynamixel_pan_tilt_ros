@@ -21,14 +21,20 @@ roslaunch dynamixel_pan_tilt dym_pan_tilt.launch
 
 ## Subscribed topics
 ### /cmd_vel
+*Message type: [PanTiltCmd](dynamixel_pan_tilt_msgs/msg//PanTiltCmd.msg)*
+
 Command the pan tilt servos to move at the set velocity.
 
 Note: The servos are commanded in position mode where the goal positions are either the max or min positions (defined by `dxl_<pan/tilt>_position_<min/max>`) depending on the direction of the velocity. The velocity is varied by changing the profile velocity to the specified values.
 
 ### /cmd_inc
+*Message type: [PanTiltCmd](dynamixel_pan_tilt_msgs/msg//PanTiltCmd.msg)*
+
 Command the pan tilt servos to move by the specified position increment.
 
 ### /cmd_pos
+*Message type: [PanTiltCmd](dynamixel_pan_tilt_msgs/msg//PanTiltCmd.msg)*
+
 *value from 0 to 1*
 
 
@@ -37,6 +43,23 @@ Command the pan tilt servos to move to the desired position within the minimum a
 - 0: Represents the minimum position of the servo motor, defined by `dxl_<pan/tilt>_position_min`
 - 1: Represents the maximum position of the servo motor, defined by `dxl_<pan/tilt>_position_max`
 - Values between 0 and 1 interpolate between the minimum and maximum positions linearly.
+
+## Published topics
+### /diagnostics
+For each motor the following information is broadcasted at 10 hz:
+
+- online status
+- torque enabled status 
+- hardware error presence, including over-load, over-heat, electronical shock, motor encoder error.
+- goal position
+- present position
+- present velocity
+- present load
+
+### /status
+*Message type: [JointStatus](dynamixel_pan_tilt_msgs/msg/JointStatus.msg)*
+
+Publishes a message with updated information of each motor every 0.1 second if parameter `enable_present_velocity` is set to `true`. These information is the same as those published in `/diagnostics`, only useful if the user wants to retrieve the status without the need to filter through the diagnostics message.
 
 ## Services
 ### /home
